@@ -1,0 +1,77 @@
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+public class IndividualDataGenerator {
+    private static final int MAX_NODES = 10; // Maximum number of nodes
+    private static final int MAX_COST = 5; // Maximum cost for edges
+
+    public static void main(String[] args) {
+        String email = "abc@email.com"; // Sample input email
+
+        long seed = generateSeed(email);
+        Random random = new Random(seed);
+
+        List<String> nodes = generateNodes(random);
+        List<JSONObject> edges = generateEdges(nodes, random);
+
+        // Create JSON output
+        JSONObject output = new JSONObject();
+        output.put("Nodes", new JSONArray(nodes));
+        output.put("Edges", new JSONArray(edges));
+
+        System.out.println(output.toString(4));
+    }
+
+    // Generate seed based on email
+    private static long generateSeed(String email) {
+        return email.hashCode();
+    }
+
+    // Generate nodes
+    private static List<String> generateNodes(Random random) {
+        int numNodes = random.nextInt(MAX_NODES) + 1; // At least 1 node
+        Set<String> nodeSet = new HashSet<>();
+
+        while (nodeSet.size() < numNodes) {
+            int firstChar = 'A' + random.nextInt(26);
+            int secondChar = 'A' + random.nextInt(26);
+            String node = Character.toString((char) firstChar) + Character.toString((char) secondChar);
+            nodeSet.add(node);
+        }
+
+        return new ArrayList<>(nodeSet);
+    }
+
+    // Generate edges
+    private static List<JSONObject> generateEdges(List<String> nodes, Random random) {
+        List<JSONObject> edges = new ArrayList<>();
+        Set<String> visitedEdges = new HashSet<>();
+
+        for (String from : nodes) {
+            String to = nodes.get(random.nextInt(nodes.size()));
+            String edge = from + "_" + to;
+
+            // Ensure no duplicate edges
+            while (from.equals(to) || visitedEdges.contains(edge)) {
+                to = nodes.get(random.nextInt(nodes.size()));
+                edge = from + "_" + to;
+            }
+
+            visitedEdges.add(edge);
+            double cost = random.nextDouble() * MAX_COST;
+            JSONObject edgeObj = new JSONObject();
+            edgeObj.put("from", from);
+            edgeObj.put("to", to);
+            edgeObj.put("cost", cost);
+            edges.add(edgeObj);
+        }
+
+        return edges;
+    }
+}
