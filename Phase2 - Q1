@@ -1,0 +1,100 @@
+import java.util.*;
+
+class Node {
+    String name;
+    double cost;
+
+    public Node(String name, double cost) {
+        this.name = name;
+        this.cost = cost;
+    }
+}
+
+public class ShortestRoute {
+    private static Map<String, List<Node>> graph = new HashMap<>();
+
+    public static void main(String[] args) {
+        // Input data
+        String startNode = "C";
+        String endNode = "F";
+        List<Map<String, Object>> edges = new ArrayList<>();
+        edges.add(Map.of("from", "A", "to", "B", "weight", 1));
+        edges.add(Map.of("from", "B", "to", "C", "weight", 3));
+        edges.add(Map.of("from", "B", "to", "E", "weight", 3.5));
+        edges.add(Map.of("from", "C", "to", "E", "weight", 4));
+        edges.add(Map.of("from", "C", "to", "D", "weight", 2.5));
+        edges.add(Map.of("from", "D", "to", "G", "weight", 2.5));
+        edges.add(Map.of("from", "G", "to", "F", "weight", 3.5));
+        edges.add(Map.of("from", "E", "to", "F", "weight", 2));
+        edges.add(Map.of("from", "F", "to", "H", "weight", 2.5));
+        edges.add(Map.of("from", "H", "to", "I", "weight", 1));
+
+        // Construct the graph
+        constructGraph(edges);
+
+        // Find the shortest route
+        List<String> shortestRoute = findShortestRoute(startNode, endNode);
+
+        // Output the result
+        System.out.println(shortestRoute);
+    }
+
+    private static void constructGraph(List<Map<String, Object>> edges) {
+        for (Map<String, Object> edge : edges) {
+            String from = (String) edge.get("from");
+            String to = (String) edge.get("to");
+            double weight = (double) edge.get("weight");
+
+            graph.putIfAbsent(from, new ArrayList<>());
+            graph.putIfAbsent(to, new ArrayList<>());
+
+            graph.get(from).add(new Node(to, weight));
+            graph.get(to).add(new Node(from, weight)); // Assuming bidirectional edges
+        }
+    }
+
+    private static List<String> findShortestRoute(String startNode, String endNode) {
+        Map<String, Double> distances = new HashMap<>();
+        Map<String, String> previous = new HashMap<>();
+        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingDouble(node -> node.cost));
+
+        // Initialize distances
+        for (String node : graph.keySet()) {
+            if (node.equals(startNode)) {
+                distances.put(node, 0.0);
+                queue.offer(new Node(node, 0));
+            } else {
+                distances.put(node, Double.POSITIVE_INFINITY);
+                queue.offer(new Node(node, Double.POSITIVE_INFINITY));
+            }
+            previous.put(node, null);
+        }
+
+        // Dijkstra's algorithm
+        while (!queue.isEmpty()) {
+            Node current = queue.poll();
+            if (current.name.equals(endNode)) {
+                break;
+            }
+            for (Node neighbor : graph.get(current.name)) {
+                double newCost = distances.get(current.name) + neighbor.cost;
+                if (newCost < distances.get(neighbor.name)) {
+                    distances.put(neighbor.name, newCost);
+                    previous.put(neighbor.name, current.name);
+                    queue.offer(new Node(neighbor.name, newCost));
+                }
+            }
+        }
+
+        // Reconstruct the shortest route
+        List<String> shortestRoute = new ArrayList<>();
+        String current = endNode;
+        while (current != null) {
+            shortestRoute.add(current);
+            current = previous.get(current);
+        }
+        Collections.reverse(shortestRoute);
+
+        return shortestRoute;
+    }
+}
